@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 
-ARUCO_DICT = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+ARUCO_DICT = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_1000)
 WARP_SIZE  = 400
 INPUT_DIR  = "fotos_originais"
 OUTPUT_DIR = "fotos_retificadas"
