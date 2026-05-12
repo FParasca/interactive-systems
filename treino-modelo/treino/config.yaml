@@ -1,0 +1,12 @@
+path: C:\Users\franc\Downloads\uni\projetos\interactive-systems\treino modelo\treino
+
+
+train: images/ppfotos
+
+
+val: images/ppfotos
+
+names:
+  0: casa
+  1: arvore
+  2: personagem
