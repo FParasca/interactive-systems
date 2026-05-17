@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador do Tabuleiro</title>
+    <style>
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            font-family: sans-serif; 
+            background-color: #2c3e50; 
+            color: white;
+            margin-top: 20px;
+        }
+        canvas { 
+            background-color: #ecf0f1; 
+            border: 4px solid #34495e; 
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        #status { font-weight: bold; margin-top: 10px; font-size: 1.2em; }
+        .ok { color: #2ecc71; }
+        .erro { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>a1</h1>
+    <div id="status" class="erro">A2</div>
+    
+    <canvas id="tabuleiro" width="500" height="500"></canvas>
+
+    <script>
+        const canvas = document.getElementById('tabuleiro');
+        const ctx = canvas.getContext('2d');
+        const statusDiv = document.getElementById('status');
+        
+        const TAMANHO_CELULA = 50; 
+        let objectosNoTabuleiro = [];
+
+        const cores = {
+            'personagem': '#7f8c8d', 
+            'arvore': '#2ecc71',     
+            'casa': '#3498db'       
+        };
+
+       
+        const ws = new WebSocket('ws://127.0.0.1:8080');
+
+        ws.onopen = () => {
+            statusDiv.innerText = 'a5';
+            statusDiv.className = 'ok';
+        };
+
+        ws.onclose = () => {
+            statusDiv.innerText = 'b1';
+            statusDiv.className = 'erro';
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const pacote = JSON.parse(event.data);
+                
+                if (pacote.status === 'occluded') {
+                    statusDiv.innerText = 'a4 tapados!';
+                    statusDiv.className = 'erro';
+                } else {
+                    statusDiv.innerText = `a3 seq: ${pacote.seq})`;
+                    statusDiv.className = 'ok';
+                    objectosNoTabuleiro = pacote.objs || [];
+                    desenharTabuleiro();
+                }
+            } catch (e) {
+                console.error("Erro ao ler JSON", e);
+            }
+        };
+
+        function desenharTabuleiro() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#bdc3c7';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                ctx.beginPath(); ctx.moveTo(i * TAMANHO_CELULA, 0); ctx.lineTo(i * TAMANHO_CELULA, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i * TAMANHO_CELULA); ctx.lineTo(canvas.width, i * TAMANHO_CELULA); ctx.stroke();
+            }
+
+            objectosNoTabuleiro.forEach(obj => {
+                const col = obj.p[0];
+                const row = obj.p[1];
+                const tipo = obj.t;
+                
+                if (cores[tipo]) {
+                    const cx = col * TAMANHO_CELULA + (TAMANHO_CELULA / 2);
+                    const cy = row * TAMANHO_CELULA + (TAMANHO_CELULA / 2);
+                    const raio = (TAMANHO_CELULA / 2) - 8; 
+
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, raio, 0, 2 * Math.PI);
+                    ctx.fillStyle = cores[tipo];
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = '#2c3e50';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    if (tipo === 'personagem' && obj.o) {
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        if (obj.o === 'N') ctx.lineTo(cx, cy - raio);
+                        if (obj.o === 'S') ctx.lineTo(cx, cy + raio);
+                        if (obj.o === 'E') ctx.lineTo(cx + raio, cy);
+                        if (obj.o === 'W') ctx.lineTo(cx - raio, cy);
+                        ctx.strokeStyle = '#e74c3c';
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                    }
+                }
+            });
+        }
+
+        desenharTabuleiro();
+    </script>
+</body>
+</html>
